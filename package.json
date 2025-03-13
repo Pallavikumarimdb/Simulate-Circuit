@@ -1,0 +1,30 @@
+{
+  "name": "simulate-circuit",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
+    "prettier": "prettier --write --ignore-path .gitignore ."
+  },
+  "devDependencies": {
+    "@turbo/gen": "^2.3.3",
+    "eslint": "^9.16.0",
+    "eslint-config-custom": "*",
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.10",
+    "syncpack": "^13.0.2",
+    "turbo": "^2.4.4"
+  },
+  "packageManager": "npm@9.6.5",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "dependencies": {
+    "next-themes": "^0.4.6",
+    "vaul": "^1.1.2"
+  }
+}
