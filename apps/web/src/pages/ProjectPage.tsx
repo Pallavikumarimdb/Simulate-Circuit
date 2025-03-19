@@ -10,6 +10,7 @@ import AISteps from '../components/AISteps';
 import RepromptInput from '../components/RepromptInput';
 
 import { callAI, parseAIResponse, AIResponse } from '../lib/simulationUtils';
+import HardwareSimulator from '../components/SimulationView';
 
 interface CircuitComponent {
   id: string;
@@ -27,7 +28,6 @@ interface CircuitData {
 }
 
 const ProjectPage = () => {
-  const pathname = usePathname();
   const router = useRouter();
   const [currentView, setCurrentView] = useState('code');
   const [prompt] = useState(typeof window !== 'undefined' ? window.history.state?.prompt || '' : '');
@@ -37,6 +37,9 @@ const ProjectPage = () => {
     components: [],
     connections: [],
   });
+
+  const [activeLanguage, setActiveLanguage] = useState<"c" | "cpp" | "python" | "javascript" | "rust">('cpp');
+  const [activeMicrocontroller, setActiveMicrocontroller] = useState('arduino-uno');
 
   const [steps, setSteps] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -114,7 +117,7 @@ const ProjectPage = () => {
     };
 
     generateProject();
-  }, [prompt, router, updateStateFromAIResponse]); 
+  }, [prompt, router, updateStateFromAIResponse]);
 
   const toggleSimulation = () => {
     setIsSimulationRunning(!isSimulationRunning);
@@ -199,8 +202,8 @@ const ProjectPage = () => {
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant={isSimulationRunning ? "default" : "outline"} 
+            <Button
+              variant={isSimulationRunning ? "default" : "outline"}
               size="sm"
               onClick={toggleSimulation}
             >
@@ -210,18 +213,18 @@ const ProjectPage = () => {
           </div>
         </div>
       </header>
-      
+
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-[27%] border-r border-border/80 bg-background/50 hidden md:block overflow-y-auto flex flex-col">
           <AISteps steps={steps} />
           <div className="mt-auto p-4">
-            <RepromptInput 
-              onSubmit={handleReprompt} 
-              isProcessing={isProcessingReprompt} 
+            <RepromptInput
+              onSubmit={handleReprompt}
+              isProcessing={isProcessingReprompt}
             />
           </div>
         </aside>
-        
+
         <main className="flex-1 overflow-hidden">
           <Tabs defaultValue="code" value={currentView} onValueChange={setCurrentView} className="flex flex-col h-[92vh]">
             <div className="bg-background/80 px-4 py-2 border-b border-border/80">
@@ -240,43 +243,42 @@ const ProjectPage = () => {
                 </TabsTrigger>
               </TabsList>
             </div>
-            
+
             <div className="flex-1 overflow-auto p-4">
               <TabsContent value="code" className="h-full mt-0 p-0">
-                <CodeEditor 
-                  code={code} 
+                <CodeEditor
+                  code={code}
                   title="Arduino Code"
                   onRunCode={toggleSimulation}
                   isRunning={isSimulationRunning}
                 />
               </TabsContent>
-              
+
               <TabsContent value="circuit" className="h-full mt-0 p-0">
-                <CircuitView 
-                  components={circuitComponents.components} 
+                <CircuitView
+                  components={circuitComponents.components}
                   connections={circuitComponents.connections}
                 />
               </TabsContent>
-              
+
               <TabsContent value="simulation" className="h-full mt-0 p-0">
-                {/* <HardwareSimulator  
-                  // isRunning={isSimulationRunning} 
-                  // onToggleSimulation={toggleSimulation}
-                  // onReset={resetSimulation}
-                  projectType={projectMetadata.functionality}
-                  // components={projectMetadata}
+                <HardwareSimulator
                   code={code}
-                /> */}
+                  microcontroller={activeMicrocontroller}
+                  language={activeLanguage}
+                // isRunning={isSimulationRunning}
+                // onReset={resetSimulation}
+                />
               </TabsContent >
             </div>
           </Tabs>
         </main>
       </div>
-      
+
       <div className="md:hidden p-4 border-t border-border/80">
-        <RepromptInput 
-          onSubmit={handleReprompt} 
-          isProcessing={isProcessingReprompt} 
+        <RepromptInput
+          onSubmit={handleReprompt}
+          isProcessing={isProcessingReprompt}
         />
       </div>
     </div>
