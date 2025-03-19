@@ -33,12 +33,12 @@ const PromptInput = ({ onSubmit, isProcessing = false }: PromptInputProps) => {
   };
 
   return (
-    <div className="bg-background rounded-xl shadow-soft p-4 border border-border/80">
+    <div className="bg-[#dae5fb] rounded-xl shadow-soft p-4 border border-slate-300 mx-[14%]">
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="relative">
           <Textarea
             placeholder="Describe your hardware project..."
-            className="h-20 resize-none p-4 pr-12 focus:ring-primary"
+            className="h-full resize-none p-4 pr-12 focus:none focus-visible:outline-none bg-[#dae5fb]"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={isProcessing}
@@ -58,7 +58,7 @@ const PromptInput = ({ onSubmit, isProcessing = false }: PromptInputProps) => {
             variant="ghost"
             size="sm"
             type="button"
-            className="text-foreground/60 hover:text-foreground flex items-center gap-1 px-2"
+            className="text-foreground/60 hover:text-foreground flex items-center gap-1 px-2 bg-slate-100"
             onClick={() => setShowExamples(!showExamples)}
           >
             <Lightbulb size={16} />

@@ -215,3 +215,8 @@
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+
+.shimmer-text {
+  @apply bg-gradient-to-r from-transparent via-foreground/80 to-transparent bg-clip-text text-transparent 
+         bg-[length:200%_100%] animate-text-shimmer;
+}

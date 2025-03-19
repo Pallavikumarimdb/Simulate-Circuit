@@ -36,7 +36,7 @@ const Hero = () => {
       <div className="container px-4 md:px-6">
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
           <div className={`space-y-4 md:space-y-6 ${loaded ? 'animate-slide-up' : 'opacity-0'}`} style={{animationDelay: '0.1s'}}>
-            <div className="inline-block rounded-full bg-accent px-3 py-1 text-sm font-medium text-primary">
+            <div className="inline-block rounded-full bg-accent px-3 py-1 text-sm font-medium text-primary  border border-slate-300">
               Introducing CircuitSim.ai
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tighter md:leading-tight">
@@ -77,7 +77,7 @@ const Hero = () => {
             className={`relative rounded-xl overflow-hidden shadow-lg ${loaded ? 'animate-slide-up' : 'opacity-0'}`} 
             style={{animationDelay: '0.3s'}}
           >
-            <div className="glass-panel rounded-xl p-6 border border-border/50">
+            <div className="glass-panel rounded-xl p-6 border border-slate-300">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="h-3 w-3 rounded-full bg-red-500" />
@@ -86,14 +86,14 @@ const Hero = () => {
                   <div className="ml-auto text-sm font-medium text-foreground/60">Prompt</div>
                 </div>
                 
-                <div className="bg-background/20 backdrop-blur-sm rounded-lg p-4 border border-border/40">
+                <div className="bg-background/20 backdrop-blur-sm rounded-lg p-4 border border-border">
                   <p className="text-foreground font-medium">
                     <span ref={typedTextRef} className="code-type-animation"></span>
                   </p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-background/20 backdrop-blur-sm rounded-lg p-4 border border-border/40 h-32 flex items-center justify-center">
+                  <div className="bg-background/20 backdrop-blur-sm rounded-lg p-4 border border-border h-32 flex items-center justify-center">
                     <div className="text-center text-foreground/60">
                       <span className="block mb-2">Circuit Visualization</span>
                       <div className="animate-pulse">
@@ -105,7 +105,7 @@ const Hero = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="bg-background/20 backdrop-blur-sm rounded-lg p-4 border border-border/40 h-32 flex items-center justify-center">
+                  <div className="bg-background/20 backdrop-blur-sm rounded-lg p-4 border border-border h-32 flex items-center justify-center">
                     <div className="text-center text-foreground/60">
                       <span className="block mb-2">Simulation Output</span>
                       <div className="animate-pulse">

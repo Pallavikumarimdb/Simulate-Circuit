@@ -56,13 +56,47 @@ const Index = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${isLoaded ? 'fade-in' : 'opacity-0'}`}>
+    <div className={`bg-slate-100  min-h-screen flex flex-col ${isLoaded ? 'fade-in' : 'opacity-0'}`}>
       <NavBar />
       
       <main className="flex-1">
         <Hero />
 
-        <section id="features" className="py-16 md:py-24">
+        
+        <section id="examples" className="py-16 md:py-24">
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Try It Yourself</h2>
+              <p className="text-foreground/70 max-w-3xl mx-auto">
+                Experience the prompt-to-simulation workflow with this interactive demo.
+              </p>
+            </div>
+            
+            <div className="space-y-6 max-w-5xl mx-auto">
+              <PromptInput 
+                onSubmit={handlePromptSubmit}
+                isProcessing={isProcessing}
+              />
+              
+              {isProcessing && (
+                <div className="h-40 flex items-center justify-center">
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-12 h-12">
+                      <div className="absolute inset-0 border-4 border-primary/20 rounded-full animate-pulse" />
+                      <div className="absolute inset-0 border-t-4 border-primary rounded-full animate-spin" />
+                    </div>
+                    <p className="mt-4 text-foreground/70">
+                      Generating code and circuit visualization...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </section>
+
+        <section id="features" className="px-[25%] py-16 md:py-24">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">A Complete Hardware Development Environment</h2>
@@ -71,7 +105,7 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-20 mt-20">
               <FeatureCard 
                 icon={LightbulbIcon}
                 title="AI Code Generation"
@@ -94,18 +128,6 @@ const Index = () => {
                 title="Interactive Debugging"
                 description="Monitor variables, signals, and component states in real-time. Identify and fix issues without deploying to hardware."
                 iconClassName="bg-green-100 text-green-600"
-              />
-              <FeatureCard 
-                icon={Cpu}
-                title="Multiple Platforms"
-                description="Support for Arduino, ESP8266, ESP32, and other popular microcontrollers. One environment for all your projects."
-                iconClassName="bg-purple-100 text-purple-600"
-              />
-              <FeatureCard 
-                icon={Wrench}
-                title="Customizable Components"
-                description="Extensive library of sensors, actuators, and other hardware components to build virtually any embedded system."
-                iconClassName="bg-orange-100 text-orange-600"
               />
             </div>
           </div>
@@ -158,39 +180,6 @@ const Index = () => {
                   Run your simulation instantly. Adjust parameters, test edge cases, and debug your code in real-time.
                 </p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="examples" className="py-16 md:py-24">
-          <div className="container px-4 md:px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Try It Yourself</h2>
-              <p className="text-foreground/70 max-w-3xl mx-auto">
-                Experience the prompt-to-simulation workflow with this interactive demo.
-              </p>
-            </div>
-            
-            <div className="space-y-6 max-w-5xl mx-auto">
-              <PromptInput 
-                onSubmit={handlePromptSubmit}
-                isProcessing={isProcessing}
-              />
-              
-              {isProcessing && (
-                <div className="h-40 flex items-center justify-center">
-                  <div className="flex flex-col items-center">
-                    <div className="relative w-12 h-12">
-                      <div className="absolute inset-0 border-4 border-primary/20 rounded-full animate-pulse" />
-                      <div className="absolute inset-0 border-t-4 border-primary rounded-full animate-spin" />
-                    </div>
-                    <p className="mt-4 text-foreground/70">
-                      Generating code and circuit visualization...
-                    </p>
-                  </div>
-                </div>
-              )}
-
             </div>
           </div>
         </section>

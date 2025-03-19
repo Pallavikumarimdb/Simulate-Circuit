@@ -111,9 +111,13 @@ module.exports = {
           '100%': {
             transform: 'translateX(calc(-250px * 5))',
           },
+        }, shimmer: {
+          '0%': { backgroundPosition: '-200% 0%' },
+          '100%': { backgroundPosition: '200% 0%' },
         },
       },
       animation: {
+        'text-shimmer': 'shimmer 6s infinite linear',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         flip: 'flip 6s infinite steps(2, end)',

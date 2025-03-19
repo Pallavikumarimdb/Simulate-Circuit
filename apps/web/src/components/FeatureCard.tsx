@@ -20,7 +20,7 @@ const FeatureCard = ({
 }: FeatureCardProps) => {
   return (
     <div className={cn(
-      "card-neu p-6 flex flex-col items-start", 
+      "card-neu p-6 flex flex-col items-start text-center items-center justify-center", 
       className
     )}>
       <div className={cn(
