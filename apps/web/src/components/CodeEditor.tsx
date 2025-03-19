@@ -1,147 +1,242 @@
+import React, { useState, useRef } from 'react';
+import { Button } from './ui/button';
+import {
+  Copy,
+  Check,
+  Download,
+  Code as CodeIcon,
+  Play,
+  Pause,
+  Folder,
+  FileCode,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react';
+import Editor, { Monaco } from '@monaco-editor/react';
 
-'use client';
-import { useState, useEffect } from 'react';
-import { Button } from '../components/ui/button';
-import { Play, Save, Download, Upload, RefreshCw, Copy, CheckCheck } from 'lucide-react';
-import { toast } from '../components/ui/use-toast';
+interface CodeFile {
+  name: string;
+  language: string;
+  content: string;
+}
 
 interface CodeEditorProps {
-  initialCode?: string;
+  code: string;
+  language?: string;
+  title?: string;
+  onRunCode?: () => void;
+  isRunning?: boolean;
+  files?: CodeFile[];
 }
 
-const CodeEditor = ({ initialCode }: CodeEditorProps) => {
-  const [code, setCode] = useState(`// Welcome to the AI Embedded Code Editor
-// Start typing or use the AI prompt to generate code
-
-void setup() {
-  // Initialize your components here
-  Serial.begin(9600);
-  pinMode(LED_BUILTIN, OUTPUT);
-  
-  Serial.println("Setup complete!");
-}
-
-void loop() {
-  // Main code will run repeatedly
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(1000);
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(1000);
-}`);
-
-  const [isCompiling, setIsCompiling] = useState(false);
-  const [compileResult, setCompileResult] = useState('');
+const CodeEditor = ({
+  code,
+  language = 'cpp',
+  title = 'Arduino Code',
+  onRunCode,
+  isRunning = false,
+  files = [],
+}: CodeEditorProps) => {
   const [copied, setCopied] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
+    '/': true,
+  });
+  const editorRef = useRef<any>(null);
 
-  useEffect(() => {
-    if (initialCode) {
-      setCode(initialCode);
-    }
-  }, [initialCode]);
+  // If no files provided, create a default one from the code prop
+  const effectiveFiles = files.length > 0
+    ? files
+    : [{ name: 'main.ino', language: 'cpp', content: code }];
 
-  const handleCompile = () => {
-    setIsCompiling(true);
-    setCompileResult('');
-    
-    // Simulate compilation process
-    setTimeout(() => {
-      setIsCompiling(false);
-      
-      // Randomly decide if compilation succeeded or failed
-      const success = Math.random() > 0.2;
-      
-      if (success) {
-        setCompileResult('Compilation successful. No errors found.');
-        toast({
-          title: "Compilation successful",
-          description: "Your code compiled successfully with no errors.",
-        });
-      } else {
-        // Generate random compilation error
-        const lineNumber = Math.floor(Math.random() * code.split('\n').length) + 1;
-        const errors = [
-          `error: 'Serial' was not declared in this scope`,
-          `error: expected ';' before '{' token`,
-          `error: 'pinMode' was not declared in this scope`,
-          `error: undefined reference to 'digitalWrite'`
-        ];
-        const randomError = errors[Math.floor(Math.random() * errors.length)];
-        setCompileResult(`Error on line ${lineNumber}: ${randomError}`);
-        
-        toast({
-          title: "Compilation failed",
-          description: `Error on line ${lineNumber}: ${randomError}`,
-          variant: "destructive",
-        });
+  // Get the content of the currently selected file
+  const activeFile = selectedFile
+    ? effectiveFiles.find((f) => f.name === selectedFile) || effectiveFiles[0]
+    : effectiveFiles[0];
+
+  // Group files by folder structure
+  const filesByFolder: Record<string, string[]> = {};
+  effectiveFiles.forEach((file) => {
+    const parts = file.name.split('/');
+    let currentPath = '/';
+
+    // Handle files at root
+    if (parts.length === 1) {
+      if (!filesByFolder[currentPath]) {
+        filesByFolder[currentPath] = [];
       }
-    }, 1500);
-  };
+      filesByFolder[currentPath].push(file.name);
+      return;
+    }
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(code);
+    // Handle nested files
+    for (let i = 0; i < parts.length - 1; i++) {
+      const folder = parts[i];
+      const parentPath = currentPath;
+      currentPath = currentPath === '/' ? `/${folder}` : `${currentPath}/${folder}`;
+
+      if (!filesByFolder[parentPath]) {
+        filesByFolder[parentPath] = [];
+      }
+
+      if (!filesByFolder[parentPath].includes(currentPath)) {
+        filesByFolder[parentPath].push(currentPath);
+      }
+
+      if (!filesByFolder[currentPath]) {
+        filesByFolder[currentPath] = [];
+      }
+
+      if (i === parts.length - 2) {
+        filesByFolder[currentPath].push(file.name);
+      }
+    }
+  });
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(activeFile.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    toast({
-      title: "Code copied",
-      description: "Code has been copied to clipboard",
+  };
+
+  const downloadCode = () => {
+    const element = document.createElement('a');
+    const file = new Blob([activeFile.content], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = selectedFile || `${title.toLowerCase().replace(/\s/g, '_')}.ino`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
+  const toggleFolder = (path: string) => {
+    setExpandedFolders((prev) => ({
+      ...prev,
+      [path]: !prev[path],
+    }));
+  };
+
+  // Handle editor mount
+  const handleEditorDidMount = (editor: any, monaco: Monaco) => {
+    editorRef.current = editor;
+  };
+
+  // Handle file content change
+  const handleFileContentChange = (value: string | undefined) => {
+    if (activeFile) {
+      activeFile.content = value || '';
+    }
+  };
+
+  // Recursive function to render file tree
+  const renderFileTree = (folderPath: string, depth = 0) => {
+    const items = filesByFolder[folderPath] || [];
+
+    return items.map((item) => {
+      const isFolder = item.includes('/');
+      const displayName = isFolder
+        ? item.split('/').filter(Boolean).pop() || item
+        : item.split('/').pop() || item;
+
+      const isExpanded = expandedFolders[item] || false;
+
+      if (isFolder) {
+        return (
+          <div key={item} className="pl-3">
+            <button
+              className={`flex items-center gap-1 py-1 w-full text-left text-sm hover:bg-accent/50 rounded px-1`}
+              onClick={() => toggleFolder(item)}
+            >
+              {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              <Folder size={14} className="text-amber-500" />
+              <span>{displayName}</span>
+            </button>
+            {isExpanded && (
+              <div className="pl-2 border-l border-border/50 ml-2">
+                {renderFileTree(item, depth + 1)}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      return (
+        <button
+          key={item}
+          className={`pl-6 py-1 pr-2 w-full text-left text-sm flex items-center gap-1 ${
+            selectedFile === item ? 'bg-accent text-primary' : 'hover:bg-accent/50'
+          } rounded`}
+          onClick={() => setSelectedFile(item)}
+        >
+          <FileCode size={14} className={selectedFile === item ? 'text-primary' : 'text-foreground/70'} />
+          <span>{displayName}</span>
+        </button>
+      );
     });
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="border-b flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium">sketch.ino</span>
-          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+    <div className="bg-background rounded-xl shadow-soft border border-border/80 overflow-hidden h-full flex flex-col">
+      <div className="bg-accent/50 px-4 py-2 flex items-center justify-between border-b border-border/80">
+        <div className="flex items-center gap-2">
+          <CodeIcon size={16} className="text-primary" />
+          <span className="font-medium">{selectedFile || title}</span>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm" onClick={handleCopyCode}>
-            {copied ? <CheckCheck className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-            {copied ? "Copied" : "Copy"}
-          </Button>
-          <Button variant="ghost" size="sm">
-            <Save className="h-4 w-4 mr-1" />
-            Save
-          </Button>
-          <Button variant="ghost" size="sm">
-            <Download className="h-4 w-4 mr-1" />
-            Export
-          </Button>
-          <Button variant="ghost" size="sm">
-            <Upload className="h-4 w-4 mr-1" />
-            Import
-          </Button>
-        </div>
-      </div>
-      
-      <div className="flex-grow relative">
-        <textarea
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          className="h-full w-full resize-none p-4 font-mono text-sm bg-white dark:bg-gray-900 focus:outline-none focus:ring-0"
-          spellCheck="false"
-        />
-      </div>
-      
-      <div className="border-t p-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800">
-        <div className="flex-grow px-4">
-          {isCompiling ? (
-            <div className="flex items-center text-amber-500">
-              <RefreshCw className="animate-spin h-4 w-4 mr-2" />
-              Compiling...
-            </div>
-          ) : (
-            compileResult && (
-              <div className={`text-sm ${compileResult.includes('error') ? 'text-destructive' : 'text-green-500'}`}>
-                {compileResult}
-              </div>
-            )
+        <div className="flex items-center gap-1">
+          {onRunCode && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-foreground/70 hover:text-foreground"
+              onClick={onRunCode}
+            >
+              {isRunning ? <Pause size={16} /> : <Play size={16} />}
+            </Button>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-foreground/70 hover:text-foreground"
+            onClick={copyToClipboard}
+          >
+            {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-foreground/70 hover:text-foreground"
+            onClick={downloadCode}
+          >
+            <Download size={16} />
+          </Button>
         </div>
-        <Button onClick={handleCompile} disabled={isCompiling}>
-          <Play className="h-4 w-4 mr-1" />
-          {isCompiling ? 'Compiling...' : 'Compile & Run'}
-        </Button>
+      </div>
+
+      <div className="flex-1 flex">
+        {/* File Explorer */}
+        <div className="w-48 border-r border-border/80 bg-background/50 overflow-y-auto p-2">
+          <div className="text-xs uppercase text-foreground/50 py-1 px-2">Explorer</div>
+          {renderFileTree('/')}
+        </div>
+
+        {/* Code Content */}
+        <div className="flex-1 overflow-auto">
+          <Editor
+            height="100%"
+            width="100%"
+            language={activeFile.language}
+            theme="vs-dark"
+            value={activeFile.content}
+            onChange={handleFileContentChange}
+            onMount={handleEditorDidMount}
+            options={{
+              fontSize: 14,
+              minimap: { enabled: false },
+              wordWrap: 'on',
+              scrollBeyondLastLine: false,
+            }}
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 
-import Dashboard from '@/src/components/Dashboard';
+
+import Index from '@/src/pages/Index';
 
 
 
@@ -7,7 +8,7 @@ export default function Home() {
   return (
     <div className="  ">
       <main className="">
-       <Dashboard/>
+      <Index />
       </main>
     </div>
   );
