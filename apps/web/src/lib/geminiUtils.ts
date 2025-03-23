@@ -1,7 +1,7 @@
 import { AICallParams, AIResponse } from './simulationUtils';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Gemini API types
+
 type GeminiRequestParams = {
   contents: {
     parts: {
@@ -16,9 +16,7 @@ type GeminiRequestParams = {
   };
 };
 
-/**
- * Enhanced prompt templates for different project types
- */
+
 const promptTemplates = {
   project_generation: `
 You are an expert Arduino and electronics engineering assistant specialized in creating hardware projects.
@@ -108,9 +106,6 @@ Ensure all changes are pragmatic, follow best practices, maintain compatibility 
 `,
 };
 
-/**
- * Make a call to the Gemini API (non-streaming)
- */
 export const callGemini = async (params: AICallParams): Promise<AIResponse> => {
   const apiKey =  process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 
@@ -143,7 +138,6 @@ export const callGemini = async (params: AICallParams): Promise<AIResponse> => {
   }
 
   try {
-    // Prepare the input for generateContent
     const input = {
       contents: [
         {
@@ -156,7 +150,6 @@ export const callGemini = async (params: AICallParams): Promise<AIResponse> => {
       ],
     };
 
-    // Call the Gemini API
     const result = await model.generateContent(input.contents[0].parts);
     const response = await result.response;
     const text = response.text();

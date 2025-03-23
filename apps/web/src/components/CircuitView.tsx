@@ -24,7 +24,6 @@ interface CircuitViewProps {
 }
 
 const CircuitView = ({ components, connections }: CircuitViewProps) => {
-  // Map components to React Flow nodes
   const nodes = useMemo(
     () =>
       components.map((component) => ({
@@ -36,7 +35,6 @@ const CircuitView = ({ components, connections }: CircuitViewProps) => {
     [components]
   );
 
-  // Map connections to React Flow edges
   const edges = useMemo(
     () =>
       connections.map((connection, index) => ({

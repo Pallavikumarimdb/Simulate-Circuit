@@ -1,6 +1,4 @@
-/**
- * Type definitions for AI API calls
- */
+
 export type AICallParams = {
   prompt: string;
   type: 'project_generation' | 'reprompt';
@@ -47,12 +45,10 @@ export type AIResponse = {
   error?: string;
 };
 
-// Import Gemini call function (non-streaming)
+
 import { callGemini } from './geminiUtils';
 
-/**
- * Call the AI service with the given parameters
- */
+
 export const callAI = async (params: AICallParams): Promise<AIResponse> => {
   try {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
@@ -61,7 +57,7 @@ export const callAI = async (params: AICallParams): Promise<AIResponse> => {
       throw new Error('Google API key is not configured');
     }
 
-    // Call Gemini (non-streaming)
+
     const response = await callGemini(params);
     return parseAIResponse(response);
   } catch (error) {
@@ -70,25 +66,19 @@ export const callAI = async (params: AICallParams): Promise<AIResponse> => {
   }
 };
 
-/**
- * Parse the AI response into usable data for the application
- */
+
 export const parseAIResponse = (aiResponse: any): AIResponse => {
   try {
-    // Check if the AI response contains an error
     if (aiResponse.error) {
       return { error: aiResponse.error, steps: [`Error: ${aiResponse.error}`] };
     }
 
-    // Initialize the response object
     const parsedResponse: AIResponse = {};
 
-    // Parse code if present
     if (aiResponse.code) {
       parsedResponse.code = aiResponse.code;
     }
 
-    // Parse circuit components if present
     if (aiResponse.circuit) {
       parsedResponse.circuit = {
         components: aiResponse.circuit.components || [],
@@ -96,7 +86,6 @@ export const parseAIResponse = (aiResponse: any): AIResponse => {
       };
     }
 
-    // Parse metadata if present
     if (aiResponse.metadata) {
       parsedResponse.metadata = {
         functionality: aiResponse.metadata.functionality || '',
@@ -106,17 +95,14 @@ export const parseAIResponse = (aiResponse: any): AIResponse => {
       };
     }
 
-    // Parse steps if present
     if (aiResponse.steps && Array.isArray(aiResponse.steps)) {
       parsedResponse.steps = aiResponse.steps;
     } else if (aiResponse.steps && typeof aiResponse.steps === 'string') {
-      // If steps is a string, split it by newlines or commas
       parsedResponse.steps = aiResponse.steps
         .split(/[\n,]+/)
         .map((step: string) => step.trim())
         .filter((step: string) => step.length > 0);
     } else {
-      // Default steps if none are provided
       parsedResponse.steps = [
         'Analyzed your request',
         'Generated code and circuit based on requirements',
