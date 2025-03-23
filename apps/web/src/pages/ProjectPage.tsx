@@ -197,11 +197,11 @@ const ProjectPage = () => {
             <Button variant="ghost" size="icon" onClick={goBack}>
               <ChevronLeft size={18} />
             </Button>
-            <h1 className="font-medium truncate">
-              {projectMetadata.functionality} Project
+            <h1 className="font-medium truncate w-screen overflow-hidden overflow-ellipsis">
+              {projectMetadata.functionality}
             </h1>
           </div>
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <Button
               variant={isSimulationRunning ? "default" : "outline"}
               size="sm"
@@ -210,7 +210,7 @@ const ProjectPage = () => {
               <Play size={16} className="mr-2" />
               {isSimulationRunning ? "Stop Simulation" : "Run Simulation"}
             </Button>
-          </div>
+          </div> */}
         </div>
       </header>
 

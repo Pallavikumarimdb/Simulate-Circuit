@@ -2,18 +2,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import {
-  Play,
-  Square,
-  Download,
-  Upload,
-  Terminal,
-  Cpu,
-  Gauge,
-  Pin,
+import { 
+  Play, 
+  Square, 
+  Download, 
+  Upload, 
+  Terminal, 
+  Cpu, 
+  Gauge, 
+  Pin, 
   WifiIcon,
   Bluetooth,
-  Power,
+  Power
 } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import { Card, CardContent } from '../components/ui/card';
@@ -38,18 +38,14 @@ interface IOPin {
   value: number;
 }
 
-const HardwareSimulator = ({
-  code = '',
+const HardwareSimulator = ({ 
+  code = '', 
   microcontroller = 'arduino-uno',
-  language = 'cpp',
+  language = 'cpp'
 }: EmbeddedSimulatorProps) => {
   const [isRunning, setIsRunning] = useState(false);
   const [serialOutput, setSerialOutput] = useState<SerialMessage[]>([
-    {
-      text: 'Serial monitor initialized. Ready to receive data.',
-      type: 'info',
-      timestamp: Date.now(),
-    },
+    { text: 'Serial monitor initialized. Ready to receive data.', type: 'info', timestamp: Date.now() }
   ]);
   const serialEndRef = useRef<HTMLDivElement>(null);
   const [currentTab, setCurrentTab] = useState('serial');
@@ -64,10 +60,91 @@ const HardwareSimulator = ({
   const [uploadedBinary, setUploadedBinary] = useState<File | null>(null);
 
   useEffect(() => {
-    const pinConfiguration = getPinConfiguration(microcontroller);
+    let pinConfiguration: IOPin[] = [];
+    
+    switch (microcontroller) {
+      case 'arduino-uno':
+        // Digital pins
+        const digitalPins: IOPin[] = Array.from({ length: 14 }, (_, i) => ({
+          id: i,
+          name: `D${i}`,
+          type: 'digital',
+          mode: 'input',
+          value: 0
+        }));
+        
+        // Analog pins
+        const analogPins: IOPin[] = Array.from({ length: 6 }, (_, i) => ({
+          id: 14 + i,
+          name: `A${i}`,
+          type: 'analog',
+          mode: 'input',
+          value: 0
+        }));
+        
+        pinConfiguration = [...digitalPins, ...analogPins] as IOPin[];
+        setMemoryTotal(2);
+        setFlashTotal(32);
+        break;
+        
+      case 'esp32':
+        const esp32Pins: IOPin[] = Array.from({ length: 40 }, (_, i) => {
+          let pinType: 'digital' | 'analog' | 'pwm';
+          if (i < 8) pinType = 'digital';
+          else if (i < 16) pinType = 'analog';
+          else pinType = 'pwm';
+          
+          return {
+            id: i,
+            name: `GPIO${i}`,
+            type: pinType,
+            mode: 'input',
+            value: 0
+          };
+        });
+        
+        pinConfiguration = esp32Pins;
+        setMemoryTotal(520);
+        setFlashTotal(4096);
+        break;
+        
+      case 'stm32f4':
+        // Digital pins PA0-PA15
+        const paPins: IOPin[] = Array.from({ length: 16 }, (_, i) => ({
+          id: i,
+          name: `PA${i}`,
+          type: 'digital',
+          mode: 'input',
+          value: 0
+        }));
+        
+        // Mixed pins PB0-PB15 (Some are analog)
+        const pbPins: IOPin[] = Array.from({ length: 16 }, (_, i) => ({
+          id: 16 + i,
+          name: `PB${i}`,
+          type: i < 8 ? 'analog' : 'digital',
+          mode: 'input',
+          value: 0
+        }));
+        
+        pinConfiguration = [...paPins, ...pbPins];
+        setMemoryTotal(128);
+        setFlashTotal(1024);
+        break;
+        
+      default:
+        pinConfiguration = Array.from({ length: 14 }, (_, i) => ({
+          id: i,
+          name: `D${i}`,
+          type: 'digital',
+          mode: 'input',
+          value: 0
+        }));
+        setMemoryTotal(2);
+        setFlashTotal(32);
+    }
+    
     setPins(pinConfiguration);
-    setMemoryTotal(getMemoryTotal(microcontroller));
-    setFlashTotal(getFlashTotal(microcontroller));
   }, [microcontroller]);
 
   useEffect(() => {
@@ -87,21 +164,21 @@ const HardwareSimulator = ({
   const startSimulation = () => {
     if (!code && !uploadedBinary) {
       toast({
-        title: 'Simulation Error',
-        description: 'No code or binary provided to run',
-        variant: 'destructive',
+        title: "Simulation Error",
+        description: "No code or binary provided to run",
+        variant: "destructive"
       });
       return;
     }
-
+    
     setIsRunning(true);
     addSerialMessage('Starting simulation...', 'info');
     addSerialMessage(`Initializing ${getMCUName(microcontroller)}...`, 'info');
-
+    
     setTimeout(() => {
       addSerialMessage('Firmware uploaded successfully', 'info');
       addSerialMessage('Boot sequence started...', 'output');
-
+      
       if (microcontroller === 'arduino-uno') {
         addSerialMessage('Arduino Uno initialized', 'output');
         if (code.includes('setup()') || uploadedBinary) {
@@ -118,34 +195,34 @@ const HardwareSimulator = ({
         addSerialMessage('SystemCoreClock = 168MHz', 'output');
         addSerialMessage('Peripherals initialized', 'output');
       }
-
+      
       runSimulationLoop();
     }, 1500);
   };
 
   const runSimulationLoop = () => {
     let loopCount = 0;
-
+    
     if (simulationIntervalRef.current) {
       clearInterval(simulationIntervalRef.current);
     }
-
+    
     simulationIntervalRef.current = setInterval(() => {
       loopCount++;
-
+      
       const newCpuUsage = Math.floor(25 + Math.random() * 15);
       setCpuUsage(newCpuUsage);
-
+      
       const newMemUsage = Math.floor(0.3 * memoryTotal + Math.random() * 0.2 * memoryTotal);
       setMemoryUsage(newMemUsage);
-
+      
       const newFlashUsage = Math.floor(0.4 * flashTotal + Math.random() * 0.1 * flashTotal);
       setFlashUsage(newFlashUsage);
-
+      
       if (loopCount % 5 === 0) {
         updateRandomPin();
       }
-
+      
       if (loopCount % 3 === 0) {
         if ((code.includes('Serial.print') || uploadedBinary) && microcontroller === 'arduino-uno') {
           addSerialMessage(`LED state: ${loopCount % 2 === 0 ? 'HIGH' : 'LOW'}`, 'output');
@@ -159,7 +236,7 @@ const HardwareSimulator = ({
           addSerialMessage(`ADC value: ${Math.floor(Math.random() * 4095)}`, 'output');
         }
       }
-
+      
       if (loopCount % 20 === 0 && Math.random() > 0.7) {
         addSerialMessage('Warning: High CPU temperature detected', 'error');
       }
@@ -167,11 +244,11 @@ const HardwareSimulator = ({
   };
 
   const updateRandomPin = () => {
-    setPins((currentPins) => {
+    setPins(currentPins => {
       const newPins = [...currentPins];
       const randomIndex = Math.floor(Math.random() * newPins.length);
       const pin = newPins[randomIndex];
-
+      
       if (pin.mode === 'output' || Math.random() > 0.7) {
         if (pin.type === 'digital') {
           pin.value = pin.value === 0 ? 1 : 0;
@@ -181,38 +258,40 @@ const HardwareSimulator = ({
           pin.value = Math.floor(Math.random() * 256);
         }
       }
-
+      
       return newPins;
     });
   };
 
   const togglePinMode = (pinId: number) => {
-    setPins((currentPins) =>
-      currentPins.map((pin) =>
-        pin.id === pinId
-          ? {
-              ...pin,
-              mode: pin.mode === 'input' ? 'output' : 'input',
-              value: pin.mode === 'input' ? 0 : pin.value,
-            }
-          : pin
-      )
-    );
+    setPins(currentPins => {
+      return currentPins.map(pin => {
+        if (pin.id === pinId) {
+          return {
+            ...pin,
+            mode: pin.mode === 'input' ? 'output' : 'input',
+            value: pin.mode === 'input' ? 0 : pin.value
+          };
+        }
+        return pin;
+      });
+    });
   };
 
   const toggleDigitalPinValue = (pinId: number) => {
-    setPins((currentPins) =>
-      currentPins.map((pin) =>
-        pin.id === pinId && pin.mode === 'output' && pin.type === 'digital'
-          ? {
-              ...pin,
-              value: pin.value === 0 ? 1 : 0,
-            }
-          : pin
-      )
-    );
-
-    const pin = pins.find((p) => p.id === pinId);
+    setPins(currentPins => {
+      return currentPins.map(pin => {
+        if (pin.id === pinId && pin.mode === 'output' && pin.type === 'digital') {
+          return {
+            ...pin,
+            value: pin.value === 0 ? 1 : 0
+          };
+        }
+        return pin;
+      });
+    });
+    
+    const pin = pins.find(p => p.id === pinId);
     if (pin) {
       addSerialMessage(`Pin ${pin.name} set to ${pin.value === 0 ? 'HIGH' : 'LOW'}`, 'output');
     }
@@ -221,34 +300,34 @@ const HardwareSimulator = ({
   const stopSimulation = () => {
     setIsRunning(false);
     addSerialMessage('Simulation stopped', 'info');
-
+    
     if (simulationIntervalRef.current) {
       clearInterval(simulationIntervalRef.current);
       simulationIntervalRef.current = null;
     }
-
+    
     setCpuUsage(0);
     setMemoryUsage(0);
     setFlashUsage(0);
-
-    setPins((currentPins) =>
-      currentPins.map((pin) => ({
+    
+    setPins(currentPins => {
+      return currentPins.map(pin => ({
         ...pin,
-        value: 0,
-      }))
-    );
+        value: 0
+      }));
+    });
   };
 
   const addSerialMessage = (text: string, type: 'info' | 'error' | 'output' = 'output') => {
-    setSerialOutput((prev) => [
-      ...prev,
-      { text, type, timestamp: Date.now() },
+    setSerialOutput(prev => [
+      ...prev, 
+      { text, type, timestamp: Date.now() }
     ]);
   };
 
   const clearSerialOutput = () => {
     setSerialOutput([
-      { text: 'Serial monitor cleared', type: 'info', timestamp: Date.now() },
+      { text: 'Serial monitor cleared', type: 'info', timestamp: Date.now() }
     ]);
   };
 
@@ -257,7 +336,7 @@ const HardwareSimulator = ({
     if (file) {
       setUploadedBinary(file);
       toast({
-        title: 'Binary uploaded',
+        title: "Binary uploaded",
         description: `${file.name} (${formatFileSize(file.size)}) ready for simulation`,
       });
       addSerialMessage(`Binary file uploaded: ${file.name} (${formatFileSize(file.size)})`, 'info');
@@ -277,95 +356,10 @@ const HardwareSimulator = ({
 
   const getMCUName = (id: string): string => {
     switch (id) {
-      case 'arduino-uno':
-        return 'Arduino Uno';
-      case 'esp32':
-        return 'ESP32 DevKit';
-      case 'stm32f4':
-        return 'STM32F4 Discovery';
-      default:
-        return 'Unknown MCU';
-    }
-  };
-
-  const getPinConfiguration = (microcontroller: string): IOPin[] => {
-    switch (microcontroller) {
-      case 'arduino-uno':
-        return [
-          ...Array.from({ length: 14 }, (_, i) => ({
-            id: i,
-            name: `D${i}`,
-            type: 'digital',
-            mode: 'input',
-            value: 0,
-          })),
-          ...Array.from({ length: 6 }, (_, i) => ({
-            id: 14 + i,
-            name: `A${i}`,
-            type: 'analog',
-            mode: 'input',
-            value: 0,
-          })),
-        ];
-      case 'esp32':
-        return Array.from({ length: 40 }, (_, i) => ({
-          id: i,
-          name: `GPIO${i}`,
-          type: i < 8 ? 'digital' : i < 16 ? 'analog' : 'pwm',
-          mode: 'input',
-          value: 0,
-        }));
-      case 'stm32f4':
-        return [
-          ...Array.from({ length: 16 }, (_, i) => ({
-            id: i,
-            name: `PA${i}`,
-            type: 'digital',
-            mode: 'input',
-            value: 0,
-          })),
-          ...Array.from({ length: 16 }, (_, i) => ({
-            id: 16 + i,
-            name: `PB${i}`,
-            type: i < 8 ? 'analog' : 'digital',
-            mode: 'input',
-            value: 0,
-          })),
-        ];
-      default:
-        return Array.from({ length: 14 }, (_, i) => ({
-          id: i,
-          name: `D${i}`,
-          type: 'digital',
-          mode: 'input',
-          value: 0,
-        }));
-    }
-  };
-
-  const getMemoryTotal = (microcontroller: string): number => {
-    switch (microcontroller) {
-      case 'arduino-uno':
-        return 2;
-      case 'esp32':
-        return 520;
-      case 'stm32f4':
-        return 128;
-      default:
-        return 2;
-    }
-  };
-
-  const getFlashTotal = (microcontroller: string): number => {
-    switch (microcontroller) {
-      case 'arduino-uno':
-        return 32;
-      case 'esp32':
-        return 4096;
-      case 'stm32f4':
-        return 1024;
-      default:
-        return 32;
+      case 'arduino-uno': return 'Arduino Uno';
+      case 'esp32': return 'ESP32 DevKit';
+      case 'stm32f4': return 'STM32F4 Discovery';
+      default: return 'Unknown MCU';
     }
   };
 
@@ -1120,5 +1114,6 @@ const HardwareSimulator = ({
     </div>
   );
 };
+
 
 export default HardwareSimulator;
